@@ -110,7 +110,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             },
           };
           const res = await api.put("/auth/update-profile", data, options);
-          set({ authUser: res.data });
+          set({ authUser: res.data.user });
           toast.success("Profile updated successfully");
         } catch (error) {
           console.log("error in update profile:", error);

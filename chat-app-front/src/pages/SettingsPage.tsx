@@ -11,7 +11,8 @@ const SettingsPage = () => {
   const { theme, setTheme } = useThemeStore();
 
   return (
-    <div className="h-screen container mx-auto px-4 pt-20 max-w-5xl">
+    <div className="h-screen pt-20 pb-4 overflow-y-auto">
+    <div className="container mx-auto px-4 max-w-5xl overflow-y-auto">
       <div className="space-y-6">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">Theme</h2>
@@ -110,6 +111,7 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
