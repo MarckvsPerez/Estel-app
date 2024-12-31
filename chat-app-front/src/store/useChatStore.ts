@@ -6,6 +6,7 @@ import axiosInstance from "../lib/axios";
 
 import { User } from "../types/User";
 import { useAuthStore } from "./useAuthStore";
+import { getStoredTokens } from "../lib/utils";
 
 interface Message {
     _id: string;
@@ -45,7 +46,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     getUsers: async () => {
         set({ isUsersLoading: true });
         try {
-            const res = await axiosInstance.get("/message/users");
+            const options = {       
+                headers: {
+                  Authorization: `Bearer ${getStoredTokens()}`,
+                },
+              };
+            const res = await axiosInstance.get("/message/users", options);
             set({ users: res.data });
         } catch (error) {
             if (error instanceof AxiosError) {
@@ -61,7 +67,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     getMessages: async (userId: string) => {
         set({ isMessagesLoading: true });
         try {
-            const res = await axiosInstance.get(`/message/${userId}`);
+            const options = {
+                headers: {
+                  Authorization: `Bearer ${getStoredTokens()}`,
+                },
+              };
+            const res = await axiosInstance.get(`/message/${userId}`, options);
             set({ messages: res.data });
         } catch (error) {
             if (error instanceof AxiosError) {
@@ -76,7 +87,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     sendMessage: async (messageData: MessageData) => {
         const { selectedUser, messages } = get();
         try {
-            const res = await axiosInstance.post(`/message/send/${selectedUser?._id}`, messageData);
+            const options = {
+                headers: {
+                  Authorization: `Bearer ${getStoredTokens()}`,
+                },
+              };
+            const res = await axiosInstance.post(`/message/send/${selectedUser?._id}`, messageData, options);
             set({ messages: [...messages, res.data] });
         } catch (error) {
             if (error instanceof AxiosError) {

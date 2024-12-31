@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { LoginFormData } from "../pages/LoginPage";
 import { UpdateProfileFormData } from "../pages/ProfilePage";
 import { io, Socket } from "socket.io-client";
+import { getStoredTokens } from "../lib/utils";
 
 type AuthStore = {
     authUser: User | null;
@@ -38,14 +39,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     checkAuth: async () => {
         try {
-            const res = await api.get("/auth/check");
+          const options = {
+            headers: {
+              Authorization: `Bearer ${getStoredTokens()}`,
+            },
+          };
+
+            const res = await api.get("/auth/check", options);
 
             set({ authUser: res.data.user });
 
             get().connectSocket()
         } catch (error) {
-            console.log("Error in checkAuth:", error);
-            set({ authUser: null });
+          console.log("error in checkAuth:", error);
+          set({ authUser: null });
         } finally {
             set({ isCheckingAuth: false });
         }
@@ -97,7 +104,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     updateProfile: async (data) => {
         set({ isUpdatingProfile: true });
         try {
-          const res = await api.put("/auth/update-profile", data);
+          const options = {
+            headers: {
+              Authorization: `Bearer ${getStoredTokens()}`,
+            },
+          };
+          const res = await api.put("/auth/update-profile", data, options);
           set({ authUser: res.data });
           toast.success("Profile updated successfully");
         } catch (error) {
