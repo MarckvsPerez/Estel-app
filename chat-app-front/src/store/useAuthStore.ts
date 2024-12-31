@@ -25,6 +25,8 @@ type AuthStore = {
     disconnectSocket: () => void;
 }
 
+const ioUrl = import.meta.env.VITE_MODE === "development" ? "http://localhost:5001" : "/"
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
     authUser: null,
     isSigningUp: false,
@@ -110,7 +112,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         const { authUser } = get();
         if (!authUser || get().socket?.connected) return;
     
-        const socket = io("/", {
+        const socket = io(ioUrl, {
           query: {
             userId: authUser._id,
           },
