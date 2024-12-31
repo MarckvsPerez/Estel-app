@@ -1,0 +1,14 @@
+{
+  "name": "estel-app-serverside",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm install --prefix ./chat-app-back && npm install --prefix ./chat-app-front && npm run build --prefix ./chat-app-front",
+    "start": "npm run dev --prefix ./chat-app-back"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
