@@ -46,11 +46,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     getUsers: async () => {
         set({ isUsersLoading: true });
         try {
-            const options = {       
+            const options = {
                 headers: {
-                  Authorization: `Bearer ${getStoredTokens()}`,
+                    Authorization: `Bearer ${getStoredTokens()}`,
                 },
-              };
+            };
             const res = await axiosInstance.get("/message/users", options);
             set({ users: res.data });
         } catch (error) {
@@ -69,9 +69,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         try {
             const options = {
                 headers: {
-                  Authorization: `Bearer ${getStoredTokens()}`,
+                    Authorization: `Bearer ${getStoredTokens()}`,
                 },
-              };
+            };
             const res = await axiosInstance.get(`/message/${userId}`, options);
             set({ messages: res.data });
         } catch (error) {
@@ -82,6 +82,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             }
         } finally {
             set({ isMessagesLoading: false });
+            const users = get().users;
+            const updatedUsers = users.map(user => 
+                user._id === userId 
+                    ? { ...user, newMessage: false }
+                    : user
+            );
+            set({ users: updatedUsers });
         }
     },
     sendMessage: async (messageData: MessageData) => {
@@ -89,9 +96,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         try {
             const options = {
                 headers: {
-                  Authorization: `Bearer ${getStoredTokens()}`,
+                    Authorization: `Bearer ${getStoredTokens()}`,
                 },
-              };
+            };
             const res = await axiosInstance.post(`/message/send/${selectedUser?._id}`, messageData, options);
             set({ messages: [...messages, res.data] });
         } catch (error) {
@@ -105,24 +112,31 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     subscribeToMessages: () => {
         const { selectedUser } = get();
-        if (!selectedUser) return;
-    
+
         const socket = useAuthStore.getState().socket;
         if (!socket) return;
         socket.on("newMessage", (newMessage) => {
-          const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-          if (!isMessageSentFromSelectedUser) return;
-    
-          set({
-            messages: [...get().messages, newMessage],
-          });
+            const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser?._id;
+            if (isMessageSentFromSelectedUser) {
+                set({
+                    messages: [...get().messages, newMessage],
+                });
+            } else {
+                const users = get().users;
+                const updatedUsers = users.map(user => 
+                    user._id === newMessage.senderId 
+                        ? { ...user, newMessage: true }
+                        : user
+                );
+                set({ users: updatedUsers });
+            }
         });
-      },
-    
-      unsubscribeFromMessages: () => {
+    },
+
+    unsubscribeFromMessages: () => {
         const socket = useAuthStore.getState().socket;
         if (socket) socket.off("newMessage");
-      },
+    },
 
     setSelectedUser: (selectedUser) => set({ selectedUser }),
 }));

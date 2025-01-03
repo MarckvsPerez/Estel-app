@@ -5,4 +5,5 @@ export type User = {
     profilePicture: string;
     createdAt: string;
     updatedAt: string;
+    newMessage?: boolean;
 }
