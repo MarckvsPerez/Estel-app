@@ -1,33 +1,55 @@
 import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users, Bell } from "lucide-react";
+import { Users, Bell, MessageSquare } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, subscribeToMessages } = useChatStore();
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, subscribeToMessages, getChats, chats } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState('contacts');
 
   useEffect(() => {
     getUsers();
+    getChats();
     subscribeToMessages();
-  }, [getUsers, subscribeToMessages]);
+  }, [getUsers, getChats, subscribeToMessages]);
 
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  const filteredUsers = activeTab === 'contacts'
+    ? showOnlineOnly
+      ? users.filter((user) => onlineUsers.includes(user._id))
+      : users
+    : chats;
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
     <aside className="h-full hidden w-72 lg:block border-r border-base-300 sm:flex flex-col transition-all duration-200 overflow-auto">
-      <div className="border-b border-base-300 w-full p-5">
+       <div className="border-b border-base-300 w-full p-5">
         <div className="flex items-center gap-2">
-          <Users className="size-6" />
-          <span className="font-medium hidden lg:block">Contacts</span>
+          <button 
+            onClick={() => setActiveTab('contacts')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-t-lg ${
+              activeTab === 'contacts' ? 'bg-base-300' : ''
+            }`}
+          >
+            <Users className="size-6" />
+            <span className="font-medium hidden lg:block">Contacts</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('chats')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-t-lg ${
+              activeTab === 'chats' ? 'bg-base-300' : ''
+            }`}
+          >
+            <MessageSquare className="size-6" />
+            <span className="font-medium hidden lg:block">Chats</span>
+          </button>
         </div>
+        {activeTab === 'contacts' && (
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
@@ -38,8 +60,9 @@ const Sidebar = () => {
             />
             <span className="text-sm">Show online only</span>
           </label>
-          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
-        </div>
+            <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+          </div>
+        )}
       </div>
 
       <div className="overflow-y-auto w-full py-3">

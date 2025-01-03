@@ -24,11 +24,13 @@ interface MessageData {
 interface ChatStore {
     messages: Message[];
     users: User[];
+    chats: User[];
     selectedUser: User | null;
     isUsersLoading: boolean;
     isMessagesLoading: boolean;
 
     getUsers: () => Promise<void>;
+    getChats: () => Promise<void>;
     getMessages: (userId: string) => Promise<void>;
     sendMessage: (messageData: MessageData) => Promise<void>;
     setSelectedUser: (selectedUser: User | null) => void;
@@ -39,6 +41,7 @@ interface ChatStore {
 export const useChatStore = create<ChatStore>((set, get) => ({
     messages: [],
     users: [],
+    chats: [],
     selectedUser: null,
     isUsersLoading: false,
     isMessagesLoading: false,
@@ -53,6 +56,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             };
             const res = await axiosInstance.get("/message/users", options);
             set({ users: res.data });
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                toast.error(error.response?.data.message || "An error occurred");
+            } else {
+                toast.error("An unexpected error occurred");
+            }
+        } finally {
+            set({ isUsersLoading: false });
+        }
+    },
+
+    getChats: async () => {
+        set({ isUsersLoading: true });
+        try {
+            const options = {
+                headers: {
+                    Authorization: `Bearer ${getStoredTokens()}`,
+                },
+            };
+            const res = await axiosInstance.get("/message/chats", options);
+            
+            set({ chats: res.data });
         } catch (error) {
             if (error instanceof AxiosError) {
                 toast.error(error.response?.data.message || "An error occurred");
@@ -92,7 +117,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         }
     },
     sendMessage: async (messageData: MessageData) => {
-        const { selectedUser, messages } = get();
+        const { selectedUser, messages, chats } = get();
         try {
             const options = {
                 headers: {
@@ -101,6 +126,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             };
             const res = await axiosInstance.post(`/message/send/${selectedUser?._id}`, messageData, options);
             set({ messages: [...messages, res.data] });
+            if (selectedUser) {
+                set({ chats: [...chats, selectedUser] });
+            }
         } catch (error) {
             if (error instanceof AxiosError) {
                 toast.error(error.response?.data.message || "An error occurred");

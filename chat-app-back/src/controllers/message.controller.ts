@@ -40,7 +40,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         const senderId = req.user?._id;
 
         let imageUrl = null;
-        
+
         if (image) {
             const uploadResponse = await cloudinary.uploader.upload(image);
             imageUrl = uploadResponse.secure_url;
@@ -66,3 +66,25 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
     }
 }
 
+export const getChats = async (req: AuthRequest, res: Response) => {
+    try {
+        const loggedInUserId = req.user?._id;
+
+        // Primero encontramos todos los mensajes donde el usuario está involucrado
+        const messages = await Message.find({ $or: [{ senderId: loggedInUserId }, { receiverId: loggedInUserId }] });
+
+        const userIds = [...new Set(messages.flatMap(message => [
+            message.senderId.toString(),
+            message.receiverId.toString()
+        ]))].filter(id => id !== loggedInUserId?.toString());
+
+        const users = await User.find({ _id: { $in: userIds } });
+
+        console.log(users);
+
+        return res.status(200).json(users);
+    } catch (error) {
+        log("❌ Error getting chats", 'error', __dirname);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
